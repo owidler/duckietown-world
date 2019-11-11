@@ -65,6 +65,7 @@ else:
 
 @dataclass
 class SampledSequence(Base):
+    print('hoi')
     """ A sampled time sequence. Only defined at certain points. """
     timestamps: List[Timestamp]
     values: List[X]
