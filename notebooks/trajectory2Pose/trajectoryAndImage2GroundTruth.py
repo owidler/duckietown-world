@@ -47,6 +47,7 @@ def calculatePose(qPose):
     timestamp = 1
     pose_object = transforms
     hoi = list(get_lane_poses(m, pose_object.as_SE2()))
+
     if len(hoi) == 0:
         return 10, 0
         #center_points2.append(dw.SE2Transform.from_SE2(geo.SE2_from_translation_angle([0,0],0)))
@@ -150,66 +151,92 @@ for trajectoryFile in trajectoryFiles:
 
     for entry in range(0, len(timeStampImagesSecondsArray)-1):
         timeStampImagesSeconds = imagesDF.iloc[entry, 1]
-        timeStampImagesNanoSec = imagesDF.iloc[entry,2]
-        imageNumber = imagesDF.iloc[entry,0]
-
+        timeStampImagesNanoSec = imagesDF.iloc[entry,2] * (10**(-9))
+        imageNumber = int(imagesDF.iloc[entry,0])
         # Check if exact time is available in both dataframes
-        timeStampImages = str(timeStampImagesSeconds) + '.' + str(timeStampImagesNanoSec)
-        timeStampImages = float(timeStampImages)
+        timeStampImages = float(timeStampImagesSeconds) + float(timeStampImagesNanoSec)
         timeStampTrajectory = int(timestart) + float(realTimestamps[entryNumberTrajectory])
-        timeStampTrajectoryBefore = int(timestart) + float(realTimestamps[entryNumberTrajectory -1])
+        timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
 
         if timeStampImages == timeStampTrajectory:
             q2 = seqs2[entryNumberTrajectory]
             finalArrayPoses.append(q2)
             centerDistance, relativeHeading = calculatePose(q2)
-            finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
-            entryNumberTrajectory += 1
+            finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
+            #entryNumberTrajectory += 1
 
         elif timeStampImages < timeStampTrajectory:
-            timeStamp2 = timeStampTrajectory
-            timeStampWanted = timeStampImages
-            timeStamp1 = timeStampTrajectoryBefore
-            param = timeStampWanted / (timeStamp2 - timeStamp1)
-
-            q2 = seqs2[entryNumberTrajectory]
-            q1 = seqs2[entryNumberTrajectory-1]
-
-            qInter = interpolate(q1, q2, param)
-            finalArrayPoses.append(qInter)
-            centerDistance, relativeHeading = calculatePose(qInter)
-            finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
-
-
-        elif timeStampImages > timeStampTrajectory:
-            while timeStampImages > timeStampTrajectory:
-                entryNumberTrajectory += 1
-                lenghtTrajectoryArray = len(realTimestamps)
-                if entryNumberTrajectory > lenghtTrajectoryArray:
-                    break
-
+            if entryNumberTrajectory == 0:
+                continue
+            while timeStampImages < timeStampTrajectory:
+                entryNumberTrajectory -= 1
                 timeStampTrajectory = int(timestart) + float(realTimestamps[entryNumberTrajectory])
-                timeStampTrajectoryBefore = int(timestart) + float(realTimestamps[entryNumberTrajectory -1])
-            if timeStampImages < timeStampTrajectory:
-                timeStamp2 = timeStampTrajectory
-                timeStampWanted = timeStampImages
-                timeStamp1 = timeStampTrajectoryBefore
-                param = timeStampWanted / (timeStamp2 - timeStamp1)
+                timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
 
-                q2 = seqs2[entryNumberTrajectory]
-                q1 = seqs2[entryNumberTrajectory-1]
+            if timeStampImages > timeStampTrajectory and timeStampImages < timeStampTrajectoryAfter:
+                timeStampTrajectory = int(timestart) + float(realTimestamps[entryNumberTrajectory])
+                timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
+
+                timeStamp1 = timeStampTrajectory
+                timeStampWanted = timeStampImages
+                timeStamp2 = timeStampTrajectoryAfter
+                param = (timeStampWanted- timeStamp1) / (timeStamp2 - timeStamp1)
+                q2 = seqs2[entryNumberTrajectory+1]
+                q1 = seqs2[entryNumberTrajectory]
 
                 qInter = interpolate(q1, q2, param)
                 finalArrayPoses.append(qInter)
                 centerDistance, relativeHeading = calculatePose(qInter)
-                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
+                finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
+                continue
 
+
+        elif timeStampImages > timeStampTrajectory:
+
+            if timeStampImages < timeStampTrajectoryAfter:
+                timeStampTrajectory = int(timestart) + float(realTimestamps[entryNumberTrajectory])
+                timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
+                timeStamp1 = timeStampTrajectory
+                timeStampWanted = timeStampImages
+                timeStamp2 = timeStampTrajectoryAfter
+
+                param = (timeStampWanted- timeStamp1)/ (timeStamp2 - timeStamp1)
+
+                q2 = seqs2[entryNumberTrajectory+1]
+                q1 = seqs2[entryNumberTrajectory]
+
+                qInter = interpolate(q1, q2, param)
+                finalArrayPoses.append(qInter)
+                centerDistance, relativeHeading = calculatePose(qInter)
+                finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
+
+            else:
+                while timeStampImages > timeStampTrajectoryAfter:
+                    entryNumberTrajectory += 1
+                    #print(entryNumberTrajectory, timeStampImages, timeStampTrajectory, timeStampTrajectoryAfter)
+                    timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
+                timeStampTrajectory = int(timestart) + float(realTimestamps[entryNumberTrajectory])
+                timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
+                timeStamp1 = timeStampTrajectory
+                timeStampWanted = timeStampImages
+                timeStamp2 = timeStampTrajectoryAfter
+                #print(str(timeStamp1) + ' ' + str(timeStampWanted) + ' ' + str(timeStamp2))
+
+                param = (timeStampWanted- timeStamp1) / (timeStamp2 - timeStamp1)
+
+                q2 = seqs2[entryNumberTrajectory+1]
+                q1 = seqs2[entryNumberTrajectory]
+                qInter = interpolate(q1, q2, param)
+                finalArrayPoses.append(qInter)
+                centerDistance, relativeHeading = calculatePose(qInter)
+                finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
 
         else:
             print('unhandled')
+
     finalArrayWithoutPose = np.array(finalArrayWithoutPose)
     ArrayCol = ['ImageNumber',' timeStamp','centerDistance', 'relativeHeading']
     finalArrayWithPose = pd.DataFrame(finalArrayWithoutPose, columns=ArrayCol)
     fileName = str(trajectoryFile.split('.')[0]) + '/' + str(trajectoryFile.split('.')[0]) + '.csv'
-    finalArrayWithPose.to_csv(fileName)
+    finalArrayWithPose.to_csv(fileName, index=False)
     print('saved as: ' + str(fileName))
