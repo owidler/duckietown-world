@@ -20,7 +20,7 @@ contracts.disable_all()
 m = dw.load_map('ethz_amod_lab_k31')
 
 ### SET TRAJECTORY FILES ######
-trajectoryFiles = ['autobot29_v3.yaml']
+trajectoryFiles = ['autobot29.yaml']
 #####################################
 
 def relative_pose(q0, q1):
@@ -237,6 +237,6 @@ for trajectoryFile in trajectoryFiles:
     finalArrayWithoutPose = np.array(finalArrayWithoutPose)
     ArrayCol = ['ImageNumber',' timeStamp','centerDistance', 'relativeHeading']
     finalArrayWithPose = pd.DataFrame(finalArrayWithoutPose, columns=ArrayCol)
-    fileName = str(trajectoryFile.split('.')[0]) + '/' + str(trajectoryFile.split('.')[0]) + '.csv'
+    fileName = str(trajectoryFile.split('.')[0]) + '/' + 'matchedDataFrame.csv'
     finalArrayWithPose.to_csv(fileName, index=False)
     print('saved as: ' + str(fileName))
