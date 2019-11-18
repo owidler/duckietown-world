@@ -50,14 +50,14 @@ def calculatePose(qPose):
     try:
         tile = list(hoi[0].tile.children.keys())[0]
         if tile in notWantedTiles:
-            return -100, -100
+            return -100, -100, str(tile)
 
     except:
         print('error: ' + str(hoi))
 
 
     if len(hoi) == 0:
-        return width, 0
+        return width, 0, 'asphalt'
 
     else:
         distance_from_left = hoi[0].lane_pose.distance_from_left
@@ -74,7 +74,7 @@ def calculatePose(qPose):
         tile = list(hoi[0].tile.children.keys())[0]
 
         correctDir = hoi[0].lane_pose.correct_direction
-        return distance_from_center, rel_heading
+        return distance_from_center, rel_heading, str(tile)
 
 
 
@@ -169,8 +169,8 @@ for trajectoryFile in trajectoryFiles:
             q2 = seqs2[entryNumberTrajectory]
             finalArrayPoses.append(q2)
             counter += 1
-            centerDistance, relativeHeading = calculatePose(q2)
-            finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
+            centerDistance, relativeHeading, tile = calculatePose(q2)
+            finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading, tile])
             #entryNumberTrajectory += 1
 
         elif timeStampImages < timeStampTrajectory:
@@ -193,12 +193,12 @@ for trajectoryFile in trajectoryFiles:
                 q1 = seqs2[entryNumberTrajectory]
 
                 qInter = interpolate(q1, q2, param)
-                centerDistance, relativeHeading = calculatePose(qInter)
+                centerDistance, relativeHeading, tile = calculatePose(qInter)
                 if centerDistance == -100 and relativeHeading == -100:
                     continue
 
                 finalArrayPoses.append(qInter)
-                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
+                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading, tile])
                 continue
 
 
@@ -217,11 +217,11 @@ for trajectoryFile in trajectoryFiles:
                 q1 = seqs2[entryNumberTrajectory]
 
                 qInter = interpolate(q1, q2, param)
-                centerDistance, relativeHeading = calculatePose(qInter)
+                centerDistance, relativeHeading, tile = calculatePose(qInter)
                 if centerDistance == -100 and relativeHeading == -100:
                     continue
                 finalArrayPoses.append(qInter)
-                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
+                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading, tile])
 
             else:
                 while timeStampImages > timeStampTrajectoryAfter:
@@ -240,18 +240,18 @@ for trajectoryFile in trajectoryFiles:
                 q2 = seqs2[entryNumberTrajectory+1]
                 q1 = seqs2[entryNumberTrajectory]
                 qInter = interpolate(q1, q2, param)
-                centerDistance, relativeHeading = calculatePose(qInter)
+                centerDistance, relativeHeading, tile = calculatePose(qInter)
 
                 if centerDistance == -100 and relativeHeading == -100:
                     continue
 
                 finalArrayPoses.append(qInter)
-                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
+                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading, tile])
         else:
             print('unhandled')
     finalArrayWithoutPose = np.array(finalArrayWithoutPose)
 
-    ArrayCol = ['ImageNumber',' timeStamp','centerDistance', 'relativeHeading']
+    ArrayCol = ['ImageNumber',' timeStamp','centerDistance', 'relativeHeading', 'Tile']
     finalArrayWithPose = pd.DataFrame(finalArrayWithoutPose, columns=ArrayCol)
     fileName = str(trajectoryFile.split('.')[0]) + '/' + 'matchedDataFrame.csv'
     finalArrayWithPose.to_csv(fileName, index=False)
