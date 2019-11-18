@@ -36,38 +36,45 @@ def interpolate(q0, q1, alpha):
 
 def calculatePose(qPose):
     timestamps = 1 # [0, 1, 2, ...]
-    # SE2Transform is the wrapper for SE2 used by Duckietown World
     transforms = dw.SE2Transform.from_SE2(qPose)
-
-    #transforms = [dw.SE2Transform.from_SE2(_) for _ in qPose]
-    #seq_me = dw.SampledSequence(timestamps, transforms)
+    width = 0.188
     counter = 0
     center_points2 = []
+
+    notWantedTiles = ['3way_left', '4way', 'asphalt']
 
     timestamp = 1
     pose_object = transforms
     hoi = list(get_lane_poses(m, pose_object.as_SE2()))
 
+    try:
+        tile = list(hoi[0].tile.children.keys())[0]
+        if tile in notWantedTiles:
+            return -100, -100
+
+    except:
+        print('error: ' + str(hoi))
+
+
     if len(hoi) == 0:
-        return 10, 0
-        #center_points2.append(dw.SE2Transform.from_SE2(geo.SE2_from_translation_angle([0,0],0)))
+        return width, 0
 
     else:
-        #print('outside left: ' + str(hoi[0].lane_pose.distance_from_left) + ' outside right: ' + str(hoi[0].lane_pose.distance_from_right))
         distance_from_left = hoi[0].lane_pose.distance_from_left
         distance_from_right = hoi[0].lane_pose.distance_from_right
         distance_from_center = hoi[0].lane_pose.distance_from_center
         rel_heading = hoi[0].lane_pose.relative_heading
+        correct_direction = hoi[0].lane_pose.correct_direction
+        alongInside = hoi[0].lane_pose.along_inside
+        outsideLeft = hoi[0].lane_pose.outside_left
+        inside = hoi[0].lane_pose.inside
+        lateral = hoi[0].lane_pose.lateral
+        lateral_left = hoi[0].lane_pose.lateral_left
+        width = lateral_left
+        tile = list(hoi[0].tile.children.keys())[0]
 
-        #absTime = float(relTimestamps[counter]) + int(timestart)
+        correctDir = hoi[0].lane_pose.correct_direction
         return distance_from_center, rel_heading
-        #center_points2.append(hoi[0].lane_pose.center_point)
-        #print(hoi[0].lane_pose.distance_from_center, hoi[0].lane_pose.relative_heading)
-    #lane_pose = lanesegment.lane_pose_from_SE2Transform(pose_object)
-    #center_points.append(lane_pose.center_point)
-    #print(relTimestamps[counter])
-
-    counter += 1
 
 
 
@@ -152,7 +159,7 @@ for trajectoryFile in trajectoryFiles:
     for entry in range(0, len(timeStampImagesSecondsArray)-1):
         timeStampImagesSeconds = imagesDF.iloc[entry, 1]
         timeStampImagesNanoSec = imagesDF.iloc[entry,2] * (10**(-9))
-        imageNumber = int(imagesDF.iloc[entry,0])
+        imageNumber = imagesDF.iloc[entry,0]
         # Check if exact time is available in both dataframes
         timeStampImages = float(timeStampImagesSeconds) + float(timeStampImagesNanoSec)
         timeStampTrajectory = int(timestart) + float(realTimestamps[entryNumberTrajectory])
@@ -161,8 +168,9 @@ for trajectoryFile in trajectoryFiles:
         if timeStampImages == timeStampTrajectory:
             q2 = seqs2[entryNumberTrajectory]
             finalArrayPoses.append(q2)
+            counter += 1
             centerDistance, relativeHeading = calculatePose(q2)
-            finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
+            finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
             #entryNumberTrajectory += 1
 
         elif timeStampImages < timeStampTrajectory:
@@ -185,9 +193,12 @@ for trajectoryFile in trajectoryFiles:
                 q1 = seqs2[entryNumberTrajectory]
 
                 qInter = interpolate(q1, q2, param)
-                finalArrayPoses.append(qInter)
                 centerDistance, relativeHeading = calculatePose(qInter)
-                finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
+                if centerDistance == -100 and relativeHeading == -100:
+                    continue
+
+                finalArrayPoses.append(qInter)
+                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
                 continue
 
 
@@ -206,9 +217,11 @@ for trajectoryFile in trajectoryFiles:
                 q1 = seqs2[entryNumberTrajectory]
 
                 qInter = interpolate(q1, q2, param)
-                finalArrayPoses.append(qInter)
                 centerDistance, relativeHeading = calculatePose(qInter)
-                finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
+                if centerDistance == -100 and relativeHeading == -100:
+                    continue
+                finalArrayPoses.append(qInter)
+                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
 
             else:
                 while timeStampImages > timeStampTrajectoryAfter:
@@ -227,14 +240,17 @@ for trajectoryFile in trajectoryFiles:
                 q2 = seqs2[entryNumberTrajectory+1]
                 q1 = seqs2[entryNumberTrajectory]
                 qInter = interpolate(q1, q2, param)
-                finalArrayPoses.append(qInter)
                 centerDistance, relativeHeading = calculatePose(qInter)
-                finalArrayWithoutPose.append([int(imageNumber), timeStampImages, centerDistance, relativeHeading])
 
+                if centerDistance == -100 and relativeHeading == -100:
+                    continue
+
+                finalArrayPoses.append(qInter)
+                finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading])
         else:
             print('unhandled')
-
     finalArrayWithoutPose = np.array(finalArrayWithoutPose)
+
     ArrayCol = ['ImageNumber',' timeStamp','centerDistance', 'relativeHeading']
     finalArrayWithPose = pd.DataFrame(finalArrayWithoutPose, columns=ArrayCol)
     fileName = str(trajectoryFile.split('.')[0]) + '/' + 'matchedDataFrame.csv'
