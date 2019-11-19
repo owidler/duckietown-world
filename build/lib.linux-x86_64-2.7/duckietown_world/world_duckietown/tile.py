@@ -144,7 +144,7 @@ class Tile(PlacedObject):
                 if img.attribs.get('id', None) == ID:
                     break
             else:
-            
+
                 href = data_encoded_for_src(texture, mime_from_fn(self.fn))
                 img = drawing.image(href=href,
                                     size=(T, T),
@@ -180,6 +180,7 @@ def get_lane_poses(dw, q: SE2v, tol=0.000001):
         assert isinstance(it, IterateByTestResult), it
         assert isinstance(it.object, Tile), it.object
         tile = it.object
+        print(tile)
         tile_fqn = it.fqn
         tile_transform = it.transform_sequence
         for _ in tile_transform.transforms:

@@ -204,15 +204,16 @@ def get_lane_poses(dw, q: SE2v, tol=0.000001):
             lane_segment_relative_pose = relative_pose(lane_segment_wrt_tile.m, tile_relative_pose)
             lane_segment_transform = TransformSequence(tile_transform.transforms + it2.transform_sequence.transforms)
             lane_pose = lane_segment.lane_pose_from_SE2(lane_segment_relative_pose, tol=tol)
-
+            print(lane_segment_fqn)
+            print(lane_pose)
             M = lane_segment_transform.asmatrix2d().m
             center_point = lane_pose.center_point.as_SE2()
-
             center_point_abs = np.dot(M, center_point)
             center_point_abs_t = Matrix2D(center_point_abs)
 
-            #if lane_pose.along_inside and lane_pose.inside and lane_pose.correct_direction:
-            if lane_pose.along_inside and lane_pose.inside:
+#            if lane_pose.along_inside and lane_pose.inside and lane_pose.correct_direction:
+
+            if lane_pose.correct_direction:
                 yield GetLanePoseResult(tile=tile, tile_fqn=tile_fqn,
                                         tile_transform=tile_transform,
                                         tile_relative_pose=Matrix2D(tile_relative_pose),
