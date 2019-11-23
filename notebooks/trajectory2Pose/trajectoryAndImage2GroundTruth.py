@@ -17,10 +17,10 @@ import traceback
 contracts.disable_all()
 
 ## LOAD MAPS ##
-m = dw.load_map('ethz_amod_lab_k31')
+m = dw.load_map('robotarium2')
 
 ## FOLDER NAMES ##
-folderNames = ['autobot04']
+folderNames = ['autobot04_r1','autobot04_r2','autobot04_r03','autobot04_r4','autobot04_r5','autobot04_r6']
 
 
 #####################################
@@ -55,7 +55,7 @@ def calculatePose(qPose):
 			return -100, -100, str(tile)
 
 	except:
-		print('error: ' + str(hoi))
+		print('')
 
 
 	if len(hoi) == 0:
@@ -79,14 +79,15 @@ def calculatePose(qPose):
 		return distance_from_center, rel_heading, str(tile)
 
 
-finalArrayWithoutPose = []
-finalArrayPoses = []
-realTimestamps = []
-seqs2 = []
-final_trajectory = []
-timeStart = []
+
 
 for folderNamesSingle in folderNames:
+	finalArrayWithoutPose = []
+	finalArrayPoses = []
+	realTimestamps = []
+	seqs2 = []
+	final_trajectory = []
+	timeStart = []
 
 	for trajectoryFileNumber in range(1,100):
 		trajectoryFile = folderNamesSingle + '_' + str(trajectoryFileNumber) + '.yaml'
@@ -147,7 +148,6 @@ for folderNamesSingle in folderNames:
 			points = np.array([x[idx], y[idx]])
 			final_trajectory.append([points, z])
 
-	print(len(realTimestamps), len(timeStart))
 	for entry in range(0, len(final_trajectory)):
 
 		x =  (final_trajectory[entry][0][0] )  # -2.2
@@ -167,7 +167,7 @@ for folderNamesSingle in folderNames:
 
 
 	for entry in range(0, len(timeStampImagesSecondsArray)-1):
-		print(entry, entryNumberTrajectory)
+		print(entry)
 		if entryNumberTrajectory + 2 >= len(realTimestamps):
 			break
 		#timestart = np.array(timeStart)[entryNumberTrajectory]
@@ -179,7 +179,7 @@ for folderNamesSingle in folderNames:
 		#print(timeStampImagesSeconds, timeStampImagesNanoSec, timeStampImages)
 		timeStampTrajectory = float(realTimestamps[entryNumberTrajectory])
 		timeStampTrajectoryAfter = float(realTimestamps[entryNumberTrajectory + 1])
-		print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+		#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 		#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 
 		if timeStampImages == timeStampTrajectory:
@@ -187,7 +187,7 @@ for folderNamesSingle in folderNames:
 			finalArrayPoses.append(q2)
 
 			centerDistance, relativeHeading, tile = calculatePose(q2)
-			print(imageNumber, timeStampImages, centerDistance, relativeHeading, tile)
+			#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 			finalArrayWithoutPose.append([imageNumber, timeStampImages, centerDistance, relativeHeading, tile])
 			#entryNumberTrajectory += 1
 
@@ -202,23 +202,21 @@ for folderNamesSingle in folderNames:
 				if timeStampImages < timeStampTrajectory and timeStampImages > (float(realTimestamps[entryNumberTrajectory - 1])):
 					timeStampTrajectory = float(realTimestamps[entryNumberTrajectory-1])
 					timeStampTrajectoryAfter = float(realTimestamps[entryNumberTrajectory])
-					print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+					#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 					break
 
 				elif timeStampImages < timeStampTrajectory and timeStampImages > (float(realTimestamps[entryNumberTrajectory - 2])):
 					timeStampTrajectory = float(realTimestamps[entryNumberTrajectory - 2])
 					timeStampTrajectoryAfter = float(realTimestamps[entryNumberTrajectory])
-					print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+					#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 					break
 				else:
 					entryNumberTrajectory -= 1
 					timeStampTrajectory = float(realTimestamps[entryNumberTrajectory])
 					timeStampTrajectoryAfter = float(realTimestamps[entryNumberTrajectory + 1])
-					print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
-					if  500 > entryNumberTrajectory or entryNumberTrajectory > 750 :
-						print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
-						break
-			print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+					#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+
+			print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 
 			if timeStampTrajectory < timeStampImages < timeStampTrajectoryAfter:
 				timeStampTrajectory = float(realTimestamps[entryNumberTrajectory])
@@ -269,7 +267,7 @@ for folderNamesSingle in folderNames:
 					if entryNumberTrajectory + 2 >= len(realTimestamps):
 						break
 					if timeStampImages > timeStampTrajectory and timeStampImages > timeStampTrajectoryAfter:
-						print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+						#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 						timeStampTrajectoryAfter = float(realTimestamps[entryNumberTrajectory + 2])
 						if timeStampTrajectory < timeStampImages < timeStampTrajectoryAfter:
 							break
@@ -278,13 +276,13 @@ for folderNamesSingle in folderNames:
 							if timeStampTrajectoryAfter < timeStampImages:
 								timeStampTrajectory =  float(realTimestamps[entryNumberTrajectory])
 							timeStampTrajectoryAfter = float(realTimestamps[entryNumberTrajectory + 1])
-							print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+							#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 
-					print(entryNumberTrajectory, timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
-					#timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
+					#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+				#timeStampTrajectoryAfter = int(timestart) + float(realTimestamps[entryNumberTrajectory + 1])
 				if entryNumberTrajectory > 500:
 					timeStampTrajectory = float(realTimestamps[entryNumberTrajectory])
-					print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
+					#print(timeStampTrajectory, timeStampImages, timeStampTrajectoryAfter)
 
 				timeStampTrajectory = float(realTimestamps[entryNumberTrajectory])
 				timeStamp1 = timeStampTrajectory
