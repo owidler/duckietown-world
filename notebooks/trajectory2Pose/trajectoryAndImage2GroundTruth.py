@@ -20,7 +20,7 @@ contracts.disable_all()
 m = dw.load_map('ethz_amod_lab_k31')
 
 ## FOLDER NAMES ##
-folderNames = ['autobot04_r03']
+folderNames = ['autobot04']
 
 
 #####################################

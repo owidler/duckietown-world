@@ -120,7 +120,7 @@ class LaneSegment(PlacedObject):
         outside_left = W2 < lateral
         distance_from_left = np.abs(+ W2 - lateral)
         distance_from_right = np.abs(- W2 - lateral)
-        distance_from_center = np.abs(lateral)
+        distance_from_center = lateral
 
         L = self.get_lane_length()
         along_inside = 0 <= along_lane < L
