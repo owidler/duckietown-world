@@ -20,10 +20,12 @@ contracts.disable_all()
 m = dw.load_map('robotarium2')
 
 ## FOLDER NAMES ##
-folderNames = ['autobot04_r1','autobot04_r2','autobot04_r03','autobot04_r4','autobot04_r5','autobot04_r6']
-
+folderNames = ['autobot04_r3']
+#folderNames = ['autobot04_r1','autobot04_r2','autobot04_r3','autobot04_r4','autobot04_r5','autobot04_r6']
 
 #####################################
+global Left
+Left = True
 
 def relative_pose(q0, q1):
 	return g.SE2.multiply(g.SE2.inverse(q0), q1)
@@ -37,6 +39,7 @@ def interpolate(q0, q1, alpha):
 
 
 def calculatePose(qPose):
+	global Left
 	timestamps = 1 # [0, 1, 2, ...]
 	transforms = dw.SE2Transform.from_SE2(qPose)
 	width = 0.188
@@ -59,12 +62,21 @@ def calculatePose(qPose):
 
 
 	if len(hoi) == 0:
-		return width, 0, 'asphalt'
+		if Left is True:
+			return width, 0, 'asphalt'
+		if Left is False:
+			return -width, 0, 'asphalt'
 
 	else:
 		distance_from_left = hoi[0].lane_pose.distance_from_left
 		distance_from_right = hoi[0].lane_pose.distance_from_right
 		distance_from_center = hoi[0].lane_pose.distance_from_center
+
+		if distance_from_center > 0:
+			Left = True
+		if distance_from_center < 0:
+			Left = False
+
 		rel_heading = hoi[0].lane_pose.relative_heading
 		correct_direction = hoi[0].lane_pose.correct_direction
 		alongInside = hoi[0].lane_pose.along_inside
