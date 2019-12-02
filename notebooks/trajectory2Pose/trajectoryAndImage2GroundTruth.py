@@ -63,9 +63,9 @@ def calculatePose(qPose):
 
 	if len(hoi) == 0:
 		if Left is True:
-			return width, 0, 'asphalt'
+			return -100, -100, 'asphalt'
 		if Left is False:
-			return -width, 0, 'asphalt'
+			return -100, -100, 'asphalt'
 
 	else:
 		distance_from_left = hoi[0].lane_pose.distance_from_left
