@@ -78,7 +78,7 @@ for folderNamesSingle in folderNames:
 		print('Munging ' + str(trajectoryFile))
 
 		# Path where all yaml files are
-		pathToYaml = 'trajectoryFiles/trajectoryFiles/' + str(folderNamesSingle) + '/' + str(trajectoryFile)
+		pathToYaml = 'trajectoryFiles/' + str(folderNamesSingle) + '/' + str(trajectoryFile)
 
 		try:
 			with open(pathToYaml, 'r') as stream:
